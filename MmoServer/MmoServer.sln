@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MmoServer", "MmoServer\MmoServer.csproj", "{4E70CE56-7B5D-42C3-9C9F-DA8DAB2C3047}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{3F11379C-4708-40DE-BB5B-5CF88CC04F6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerTests", "ServerTests\ServerTests.csproj", "{98687ED8-5943-40F5-B83A-08DF3230F034}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E70CE56-7B5D-42C3-9C9F-DA8DAB2C3047}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E70CE56-7B5D-42C3-9C9F-DA8DAB2C3047}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E70CE56-7B5D-42C3-9C9F-DA8DAB2C3047}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E70CE56-7B5D-42C3-9C9F-DA8DAB2C3047}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F11379C-4708-40DE-BB5B-5CF88CC04F6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F11379C-4708-40DE-BB5B-5CF88CC04F6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F11379C-4708-40DE-BB5B-5CF88CC04F6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F11379C-4708-40DE-BB5B-5CF88CC04F6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98687ED8-5943-40F5-B83A-08DF3230F034}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98687ED8-5943-40F5-B83A-08DF3230F034}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98687ED8-5943-40F5-B83A-08DF3230F034}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98687ED8-5943-40F5-B83A-08DF3230F034}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
