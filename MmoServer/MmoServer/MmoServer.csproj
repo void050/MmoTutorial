@@ -7,4 +7,15 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Framework\Framework.csproj" />
+      <ProjectReference Include="..\Game\Game.csproj" />
+      <ProjectReference Include="..\ServerTests\ServerTests.csproj" />
+      <ProjectReference Include="..\Shared\Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="RiptideNetworking.Riptide" Version="2.0.0" />
+    </ItemGroup>
+
 </Project>

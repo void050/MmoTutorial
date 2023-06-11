@@ -1,10 +1,7 @@
 {
-    "name": "TestAssembly",
-    "rootNamespace": "",
-    "references": [
-        "GUID:cb9ba4ee8d7d3d842bd697f161ce7f33",
-        "GUID:d9bbc61d820433c42883dc4de8b0e42f"
-    ],
+    "name": "RiptideNetworking",
+    "rootNamespace": "Riptide",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

@@ -1,1 +1,3 @@
-﻿Console.WriteLine("Hello, World!");
+﻿using Riptide.Demos.ConsoleServer;
+
+UdpServerStarter.Run();
