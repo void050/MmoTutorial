@@ -6,6 +6,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using UnityEngine;
 
 namespace Riptide.Transports.Udp
 {
@@ -155,6 +156,7 @@ namespace Riptide.Transports.Udp
         /// <param name="toEndPoint">The endpoint to send the data to.</param>
         internal void Send(byte[] dataBuffer, int numBytes, IPEndPoint toEndPoint)
         {
+            Debug.Log($"Sending data isRunning: {isRunning}");
             if (isRunning)
                 socket.SendTo(dataBuffer, numBytes, SocketFlags.None, toEndPoint);
         }

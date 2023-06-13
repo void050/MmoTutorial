@@ -2,7 +2,6 @@
   "dependencies": {
     "com.unity.feature.2d": "1.0.0",
     "com.unity.ide.rider": "3.0.15",
-    "com.unity.test-framework": "1.1.33",
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.physics2d": "1.0.0",

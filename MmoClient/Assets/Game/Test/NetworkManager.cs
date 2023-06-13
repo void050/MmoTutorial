@@ -1,5 +1,6 @@
 ﻿using Riptide.Utils;
 using System;
+using Shared;
 using UnityEngine;
 
 namespace Riptide.Demos.PlayerHosted
@@ -29,9 +30,9 @@ namespace Riptide.Demos.PlayerHosted
             }
         }
 
-        [SerializeField] private ushort port;
         [Header("Prefabs")] [SerializeField] private GameObject playerPrefab;
         [SerializeField] private GameObject localPlayerPrefab;
+        private ClientMessageHandler _messageHandler;
 
         public GameObject PlayerPrefab => playerPrefab;
         public GameObject LocalPlayerPrefab => localPlayerPrefab;
@@ -40,6 +41,7 @@ namespace Riptide.Demos.PlayerHosted
 
         private void Awake()
         {
+            Application.targetFrameRate = 60;
             Singleton = this;
         }
 
@@ -48,6 +50,7 @@ namespace Riptide.Demos.PlayerHosted
             RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
 
             Client = new Client();
+            _messageHandler = new ClientMessageHandler(Client);
             Client.Connected += DidConnect;
             Client.ConnectionFailed += FailedToConnect;
             Client.ClientDisconnected += PlayerLeft;
@@ -65,14 +68,9 @@ namespace Riptide.Demos.PlayerHosted
             Client.Disconnect();
         }
 
-        internal void StartHost()
-        {
-            Client.Connect($"127.0.0.1:{port}");
-        }
-
         internal void JoinGame(string ipString)
         {
-            Client.Connect($"{ipString}:{port}");
+            Client.Connect($"{ipString}:{NetworkConfig.ServerPort.ToString()}", useMessageHandlers: false);
         }
 
         internal void LeaveGame()
@@ -83,6 +81,8 @@ namespace Riptide.Demos.PlayerHosted
         private void DidConnect(object sender, EventArgs e)
         {
             Debug.Log("DidConnect");
+            var message = Message.Create(MessageSendMode.Reliable, GameMessageId.JoinRequest.ToUShort());
+            Client.Send(message);
         }
 
         private void FailedToConnect(object sender, EventArgs e)
