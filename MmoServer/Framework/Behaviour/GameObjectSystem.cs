@@ -21,6 +21,7 @@ public class GameObjectSystem
         lock (_toAddGameObjects)
         {
             _iterateGameObjects.AddRange(_toAddGameObjects);
+            _toAddGameObjects.Clear();
         }
 
         _gameObjects.AddRange(_iterateGameObjects);
@@ -35,6 +36,18 @@ public class GameObjectSystem
         foreach (var gameObject in _iterateGameObjects)
         {
             gameObject.Update(deltaTime);
+        }
+    }
+
+    public void GetAll<T>(List<T> result) where T : Behaviour
+    {
+        foreach (var gameObject in _gameObjects)
+        {
+            var behaviour = gameObject.GetBehaviour<T>();
+            if (behaviour != null)
+            {
+                result.Add(behaviour);
+            }
         }
     }
 }

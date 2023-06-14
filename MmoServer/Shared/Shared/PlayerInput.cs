@@ -1,8 +1,13 @@
-﻿using System;
+﻿// ReSharper disable ArrangeNamespaceBody
+// ReSharper disable UnassignedField.Global
+// ReSharper disable MemberCanBePrivate.Global
+using System;
+using MemoryPack;
 
 namespace Shared
 {
-    public struct PlayerInput
+    [MemoryPackable]
+    public partial struct PlayerInput
     {
         public PlayerKeyboard Keyboard;
     }

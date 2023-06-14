@@ -4,8 +4,18 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>false</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>9</LangVersion>
+        <LangVersion>11</LangVersion>
         <RootNamespace />
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MemoryPack.Core" Version="1.9.16" />
+      <PackageReference Include="MemoryPack.Generator" Version="1.9.16">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="MemoryPack.UnityShims" Version="1.9.16" />
+      <PackageReference Include="RiptideNetworking.Riptide" Version="2.0.0" />
+    </ItemGroup>
 
 </Project>

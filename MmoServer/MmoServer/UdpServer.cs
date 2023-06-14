@@ -1,73 +1,188 @@
-﻿using Riptide.Demos.ConsoleServer.Udp;
+﻿using System.Numerics;
+using Game;
+using Game.Components;
+using Riptide.Demos.ConsoleServer.Udp;
 using Riptide.Utils;
 using Shared;
 
-namespace Riptide.Demos.ConsoleServer
+namespace Riptide.Demos.ConsoleServer;
+
+internal class UdpServerStarter
 {
-    internal class UdpServerStarter
+    private readonly RiptideServer _server = new()
     {
-        private static RiptideServer server;
-        private static bool isRunning;
+        TimeoutTime = ushort.MaxValue
+    };
 
+    private bool _isRunning;
+    private readonly Dictionary<ushort, GameObject> _playerById = new();
+    private readonly Dictionary<Connection, GameObject> _playerByConnection = new();
+    private readonly Dictionary<string, ushort> _playerIdByLogin = new();
+    private ushort _nextUserId = 1;
+    private readonly GameObjectSystem _gameObjectSystem = new();
 
-        public static void Run()
+    public UdpServerStarter()
+    {
+        _server.OnMessage += OnMessageReceived;
+    }
+
+    public void Run()
+    {
+        Console.Title = "Server";
+
+        RiptideLogger.Initialize(Console.WriteLine, true);
+        _isRunning = true;
+
+        new Thread(NetworkLoop).Start();
+        new Thread(GameLoop).Start();
+
+        Console.WriteLine("Press enter to stop the server at any time.");
+        Console.ReadLine();
+
+        _isRunning = false;
+
+        Console.ReadLine();
+    }
+
+    private void NetworkLoop()
+    {
+        _server.Start(NetworkConfig.ServerPort, NetworkConfig.MaxClients);
+
+        while (_isRunning)
         {
-            Console.Title = "Server";
+            try
+            {
+                _server.Update();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
-            RiptideLogger.Initialize(Console.WriteLine, true);
-            isRunning = true;
-
-            new Thread(Loop).Start();
-
-            Console.WriteLine("Press enter to stop the server at any time.");
-            Console.ReadLine();
-
-            isRunning = false;
-
-            Console.ReadLine();
+            Thread.Sleep(NetworkConfig.TickIntervalMilliseconds);
         }
 
-        private static void Loop()
+        _server.Stop();
+    }
+
+    private void GameLoop()
+    {
+        List<NetworkPlayerBehaviour> networkPlayers = new();
+        while (_isRunning)
         {
-            server = new RiptideServer
+            _gameObjectSystem.Update(NetworkConfig.TickInterval);
+            networkPlayers.Clear();
+            _gameObjectSystem.GetAll(networkPlayers);
+            PlayerSnapshot[] players = new PlayerSnapshot[networkPlayers.Count];
+
+            int next = 0;
+            foreach (var networkPlayer in networkPlayers)
             {
-                TimeoutTime = ushort.MaxValue
+                players[next++] = networkPlayer.GetSnapshot();
+            }
+
+            SnapshotResponse gameSnapshot = new SnapshotResponse
+            {
+                Snapshot = new GameSnapshot
+                {
+                    Players = players
+                }
             };
-            server.OnMessage += OnMessageReceived;
-            server.Start(NetworkConfig.ServerPort, NetworkConfig.MaxClients);
-
-            while (isRunning)
+            Message message = Message.Create(MessageSendMode.Unreliable, GameMessageId.SnapshotResponse.ToUShort());
+            try
             {
-                server.Update();
-                Thread.Sleep(10);
+                message.Add(gameSnapshot);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                continue;
             }
 
-            server.Stop();
-        }
+            _server.SendToAll(message);
 
-        private static void OnMessageReceived(object? sender, MessageReceivedEventArgs args)
+            Thread.Sleep(NetworkConfig.TickIntervalMilliseconds);
+        }
+    }
+
+    /// <summary>
+    /// Never executed in two threads at once.
+    /// </summary>
+    private void OnMessageReceived(object? sender, MessageReceivedEventArgs args)
+    {
+        GameMessageId messageId = (GameMessageId)args.MessageId;
+        try
         {
-            //todo use dictionary
-            GameMessageId messageId = (GameMessageId)args.MessageId;
-            Console.WriteLine($"Received {messageId}");
-            switch (messageId)
-            {
-                case GameMessageId.None:
-                    Console.WriteLine("Received None");
-                    break;
-                case GameMessageId.JoinRequest:
-                    Console.WriteLine("Received JoinRequest");
-                    Message message = Message.Create(MessageSendMode.Reliable, GameMessageId.JoinResponse);
-                    message.AddString("Welcome to the server!");
-                    server.Send(message, args.FromConnection);
-                    break;
-                case GameMessageId.JoinResponse:
-                    Console.WriteLine("Received JoinResponse");
-                    break;
-                default:
-                    Console.WriteLine($"Received Unknown {args.MessageId.ToString()}");
-                    break;
-            }
+            Handle(args.FromConnection, args.Message, messageId);
         }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private void Handle(Connection userConnection, Message incoming, GameMessageId messageId)
+    {
+        //todo use dictionary
+        GameObject? player;
+        switch (messageId)
+        {
+            case GameMessageId.JoinRequest:
+                incoming.Get(out JoinRequest joinRequest);
+                //todo add password check
+                if (!_playerIdByLogin.TryGetValue(joinRequest.Login, out var playerId))
+                {
+                    playerId = _nextUserId++;
+                    _playerIdByLogin.Add(joinRequest.Login, playerId);
+                }
+
+                if (!_playerById.TryGetValue(playerId, out player))
+                {
+                    player = CreatePlayer(playerId);
+                    _playerById.Add(playerId, player);
+                    _gameObjectSystem.AddGameObject(player);
+                }
+
+                _playerByConnection[userConnection] = player;
+
+                player.GetRequiredBehaviour<NetworkPlayerBehaviour>().Connection = userConnection;
+
+                Message message = Message.Create(MessageSendMode.Reliable, GameMessageId.JoinResponse.ToUShort());
+                message.Add(new JoinResponse { PlayerId = playerId });
+                _server.Send(message, userConnection);
+                break;
+
+            case GameMessageId.InputRequest:
+
+                if (!_playerByConnection.TryGetValue(userConnection, out player))
+                {
+                    Console.WriteLine("Not registered player");
+                    return;
+                }
+
+                incoming.Get(out InputRequest inputRequest);
+
+                player.GetRequiredBehaviour<PlayerMovementBehaviour>().PlayerInput = inputRequest.Input;
+                break;
+            default:
+                Console.WriteLine($"Received unexpected: {messageId}");
+                break;
+        }
+    }
+
+    private GameObject CreatePlayer(ushort playerId)
+    {
+        var shared = Random.Shared;
+        Vector2 position = new(shared.NextSingle() * 100, shared.NextSingle() * 100);
+        return new GameObject($"player_{playerId}", new TransformBehaviour
+        {
+            Position = position
+        }, new NetworkPlayerBehaviour
+        {
+            PlayerId = playerId
+        }, new PlayerMovementBehaviour
+        {
+            Speed = 5
+        });
     }
 }

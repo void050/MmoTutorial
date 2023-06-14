@@ -82,6 +82,7 @@ namespace Riptide.Demos.PlayerHosted
         {
             Debug.Log("DidConnect");
             var message = Message.Create(MessageSendMode.Reliable, GameMessageId.JoinRequest.ToUShort());
+            message.Add(new JoinRequest { Login = "testUser", Password = "testPassword" });
             Client.Send(message);
         }
 
@@ -106,6 +107,20 @@ namespace Riptide.Demos.PlayerHosted
         private void DidDisconnect(object sender, DisconnectedEventArgs e)
         {
             Debug.Log("DidDisconnect");
+            JoinGame($"127.0.0.1");
+        }
+
+        public void Send<T>(T inputRequest, GameMessageId messageId, bool reliable = false) where T : struct
+        {
+            if (!Client.IsConnected && _messageHandler.PlayerId != null)
+            {
+                Debug.LogError("can't send message, client is not connected or registered");
+            }
+
+            Message message = Message.Create(reliable ? MessageSendMode.Reliable : MessageSendMode.Unreliable,
+                messageId.ToUShort());
+            message.Add(inputRequest);
+            Client.Send(message);
         }
     }
 }

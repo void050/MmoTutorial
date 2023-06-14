@@ -12,6 +12,16 @@ public class Behaviour
     {
     }
 
+    public T? GetBehaviour<T>() where T : Behaviour
+    {
+        return GameObject.GetBehaviour<T>();
+    }
+
+    public T GetRequiredBehaviour<T>() where T : Behaviour
+    {
+        return GameObject.GetRequiredBehaviour<T>();
+    }
+
     public override string ToString()
     {
         return GetType().Name;

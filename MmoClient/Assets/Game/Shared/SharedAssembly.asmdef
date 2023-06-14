@@ -1,7 +1,10 @@
 {
     "name": "SharedAssembly",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:756335c0388f7114790e504ed368ae1d",
+        "GUID:d9bbc61d820433c42883dc4de8b0e42f"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

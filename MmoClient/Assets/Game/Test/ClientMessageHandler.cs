@@ -7,6 +7,7 @@ namespace Riptide.Demos.PlayerHosted
     public class ClientMessageHandler
     {
         private readonly Client _client;
+        public ushort? PlayerId { get; private set; }
 
         public ClientMessageHandler(Client client)
         {
@@ -17,21 +18,21 @@ namespace Riptide.Demos.PlayerHosted
         private void HandleMessage(object sender, MessageReceivedEventArgs args)
         {
             GameMessageId messageId = (GameMessageId)args.MessageId;
+
+            Message response = args.Message;
             switch (messageId)
             {
-                case GameMessageId.None:
-                    Debug.LogError("Received None");
-                    break;
-                case GameMessageId.JoinRequest:
-                    Debug.LogError("Received JoinRequest");
-                    break;
                 case GameMessageId.JoinResponse:
-                    Debug.Log("Received JoinResponse");
-                    string response = args.Message.GetString();
-                    Debug.Log(response);
+                    response.Get(out JoinResponse joinResponse);
+                    Debug.Log($"Received JoinResponse PlayerId: {joinResponse.PlayerId}");
+                    PlayerId = joinResponse.PlayerId;
+                    break;
+                case GameMessageId.SnapshotResponse:
+                    response.Get(out SnapshotResponse snapshotResponse);
+                    Debug.Log(snapshotResponse.Snapshot.ToString());
                     break;
                 default:
-                    Debug.LogError($"Received Unknown {args.MessageId.ToString()}");
+                    Debug.LogError($"Received Unknown {messageId}");
                     break;
             }
         }
