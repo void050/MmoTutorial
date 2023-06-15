@@ -1,12 +1,11 @@
-﻿using Riptide;
-using Shared;
+﻿using Shared;
 
 namespace Game.Components;
 
 public class NetworkPlayerBehaviour : Behaviour
 {
     public ushort PlayerId;
-    public Connection? Connection;
+    public byte ViewId = 1;
     private TransformBehaviour _transform = null!;
 
     protected override void Start()
@@ -19,7 +18,8 @@ public class NetworkPlayerBehaviour : Behaviour
         return new PlayerSnapshot
         {
             PlayerId = PlayerId,
-            Position = _transform.Position.ToClientVector2()
+            Position = _transform.Position.ToClientVector2(),
+            ViewId = ViewId
         };
     }
 }

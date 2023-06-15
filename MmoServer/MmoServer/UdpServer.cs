@@ -1,9 +1,11 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Game;
 using Game.Components;
 using Riptide.Demos.ConsoleServer.Udp;
 using Riptide.Utils;
 using Shared;
+using PrecisionTiming;
 
 namespace Riptide.Demos.ConsoleServer;
 
@@ -14,16 +16,22 @@ internal class UdpServerStarter
         TimeoutTime = ushort.MaxValue
     };
 
-    private bool _isRunning;
     private readonly Dictionary<ushort, GameObject> _playerById = new();
     private readonly Dictionary<Connection, GameObject> _playerByConnection = new();
     private readonly Dictionary<string, ushort> _playerIdByLogin = new();
-    private ushort _nextUserId = 1;
     private readonly GameObjectSystem _gameObjectSystem = new();
+    private readonly List<Message> _sendToAll = new();
+    private readonly List<Message> _iterateSendToAll = new();
+    private readonly PrecisionTimer _gameLoopTimer = new();
+    private readonly PrecisionTimer _networkLoopTimer = new();
+    private int _gameLoopUpdateIndex;
+    private ushort _nextUserId = 1;
 
     public UdpServerStarter()
     {
         _server.OnMessage += OnMessageReceived;
+        _networkLoopTimer.SetInterval(NetworkLoop, NetworkConfig.TickIntervalMilliseconds, false);
+        _gameLoopTimer.SetInterval(GameLoop, NetworkConfig.TickIntervalMilliseconds, false);
     }
 
     public void Run()
@@ -31,77 +39,92 @@ internal class UdpServerStarter
         Console.Title = "Server";
 
         RiptideLogger.Initialize(Console.WriteLine, true);
-        _isRunning = true;
 
-        new Thread(NetworkLoop).Start();
-        new Thread(GameLoop).Start();
+        const int botsCount = 75;
+        for (int i = 0; i < botsCount; i++)
+        {
+            var bot = CreateBot(_nextUserId++);
+            _gameObjectSystem.AddGameObject(bot);
+        }
+
+        _server.Start(NetworkConfig.ServerPort, NetworkConfig.MaxClients);
+        _networkLoopTimer.Start();
+        _gameLoopTimer.Start();
 
         Console.WriteLine("Press enter to stop the server at any time.");
         Console.ReadLine();
 
-        _isRunning = false;
+        _server.Stop();
 
         Console.ReadLine();
     }
 
     private void NetworkLoop()
     {
-        _server.Start(NetworkConfig.ServerPort, NetworkConfig.MaxClients);
-
-        while (_isRunning)
+        try
         {
-            try
+            _iterateSendToAll.Clear();
+            lock (_sendToAll)
             {
-                _server.Update();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
+                _iterateSendToAll.AddRange(_sendToAll);
+                _sendToAll.Clear();
             }
 
-            Thread.Sleep(NetworkConfig.TickIntervalMilliseconds);
+            foreach (var message in _iterateSendToAll)
+            {
+                _server.SendToAll(message);
+            }
+
+            _server.Update();
         }
-
-        _server.Stop();
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
+
 
     private void GameLoop()
     {
         List<NetworkPlayerBehaviour> networkPlayers = new();
-        while (_isRunning)
+        _gameObjectSystem.Update(NetworkConfig.TickInterval);
+
+        if (_gameLoopUpdateIndex++ % NetworkConfig.SnapshotEveryTick != 0)
         {
-            _gameObjectSystem.Update(NetworkConfig.TickInterval);
-            networkPlayers.Clear();
-            _gameObjectSystem.GetAll(networkPlayers);
-            PlayerSnapshot[] players = new PlayerSnapshot[networkPlayers.Count];
+            return;
+        }
 
-            int next = 0;
-            foreach (var networkPlayer in networkPlayers)
+        networkPlayers.Clear();
+        _gameObjectSystem.GetAll(networkPlayers);
+        PlayerSnapshot[] players = new PlayerSnapshot[networkPlayers.Count];
+
+        int next = 0;
+        foreach (var networkPlayer in networkPlayers)
+        {
+            players[next++] = networkPlayer.GetSnapshot();
+        }
+
+        SnapshotResponse gameSnapshot = new SnapshotResponse
+        {
+            Snapshot = new GameSnapshot
             {
-                players[next++] = networkPlayer.GetSnapshot();
+                Players = players
             }
+        };
+        Message message = Message.Create(MessageSendMode.Unreliable, GameMessageId.SnapshotResponse.ToUShort());
+        try
+        {
+            message.Add(gameSnapshot);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return;
+        }
 
-            SnapshotResponse gameSnapshot = new SnapshotResponse
-            {
-                Snapshot = new GameSnapshot
-                {
-                    Players = players
-                }
-            };
-            Message message = Message.Create(MessageSendMode.Unreliable, GameMessageId.SnapshotResponse.ToUShort());
-            try
-            {
-                message.Add(gameSnapshot);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                continue;
-            }
-
-            _server.SendToAll(message);
-
-            Thread.Sleep(NetworkConfig.TickIntervalMilliseconds);
+        lock (_sendToAll)
+        {
+            _sendToAll.Add(message);
         }
     }
 
@@ -145,8 +168,6 @@ internal class UdpServerStarter
 
                 _playerByConnection[userConnection] = player;
 
-                player.GetRequiredBehaviour<NetworkPlayerBehaviour>().Connection = userConnection;
-
                 Message message = Message.Create(MessageSendMode.Reliable, GameMessageId.JoinResponse.ToUShort());
                 message.Add(new JoinResponse { PlayerId = playerId });
                 _server.Send(message, userConnection);
@@ -170,16 +191,27 @@ internal class UdpServerStarter
         }
     }
 
+    private GameObject CreateBot(ushort playerId)
+    {
+        var gameObject = CreatePlayer(playerId);
+        gameObject.AddComponent(new SimulatedPlayerBehaviour
+        {
+            ChangeDirectionEverySeconds = Random.Shared.NextSingle() / 2 + 0.5f
+        });
+        return gameObject;
+    }
+
     private GameObject CreatePlayer(ushort playerId)
     {
         var shared = Random.Shared;
-        Vector2 position = new(shared.NextSingle() * 100, shared.NextSingle() * 100);
+        Vector2 position = new(shared.NextSingle() * 10, shared.NextSingle() * 10);
         return new GameObject($"player_{playerId}", new TransformBehaviour
         {
             Position = position
         }, new NetworkPlayerBehaviour
         {
-            PlayerId = playerId
+            PlayerId = playerId,
+            ViewId = (byte)Random.Shared.Next(1, 3)
         }, new PlayerMovementBehaviour
         {
             Speed = 5

@@ -1,16 +1,11 @@
 ﻿using Riptide.Utils;
 using System;
+using Game;
 using Shared;
 using UnityEngine;
 
 namespace Riptide.Demos.PlayerHosted
 {
-    internal enum MessageId : ushort
-    {
-        SpawnPlayer = 1,
-        PlayerMovement
-    }
-
     public class NetworkManager : MonoBehaviour
     {
         private static NetworkManager _singleton;
@@ -30,12 +25,8 @@ namespace Riptide.Demos.PlayerHosted
             }
         }
 
-        [Header("Prefabs")] [SerializeField] private GameObject playerPrefab;
-        [SerializeField] private GameObject localPlayerPrefab;
+        [SerializeField] private PlayersView _playersView;
         private ClientMessageHandler _messageHandler;
-
-        public GameObject PlayerPrefab => playerPrefab;
-        public GameObject LocalPlayerPrefab => localPlayerPrefab;
 
         internal Client Client { get; private set; }
 
@@ -50,7 +41,7 @@ namespace Riptide.Demos.PlayerHosted
             RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
 
             Client = new Client();
-            _messageHandler = new ClientMessageHandler(Client);
+            _messageHandler = new ClientMessageHandler(Client, _playersView);
             Client.Connected += DidConnect;
             Client.ConnectionFailed += FailedToConnect;
             Client.ClientDisconnected += PlayerLeft;

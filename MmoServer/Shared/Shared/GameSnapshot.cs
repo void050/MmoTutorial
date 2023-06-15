@@ -37,11 +37,12 @@ namespace Shared
     public partial struct PlayerSnapshot
     {
         public ushort PlayerId;
+        public byte ViewId;
         public Vector2 Position;
 
         public override string ToString()
         {
-            return $"PlayerId: {PlayerId.ToString()}, Position: {Position.ToString()}";
+            return $"PlayerId: {PlayerId.ToString()}, ViewId: {ViewId.ToString()} Position: {Position.ToString()}";
         }
     }
 }
