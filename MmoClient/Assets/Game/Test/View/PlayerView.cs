@@ -49,7 +49,7 @@ namespace Game
             float speed = velocity.magnitude;
             _speed = Mathf.Lerp(_speed, speed, 0.1f);
 
-            _animator.SetFloat(SpeedAnimatorProperty, _speed);
+            _animator.SetFloat(SpeedAnimatorProperty, _speed / 4);
         }
     }
 }
