@@ -45,7 +45,7 @@ public class SimulatedPlayerBehaviour : Behaviour
             ? _currentKeyboard % PlayerKeyboards.Length
             : PlayerKeyboards.Length - _currentKeyboard % PlayerKeyboards.Length - 1;
         PlayerKeyboard playerKeyboard = PlayerKeyboards[keyboardIndex];
-        if (Random.Shared.NextSingle() > 0.9f)
+        if (Random.Shared.NextSingle() > 0.95f)
         {
             playerKeyboard |= Random.Shared.NextSingle() > 0.8f
                 ? PlayerKeyboard.AttackSkill2
