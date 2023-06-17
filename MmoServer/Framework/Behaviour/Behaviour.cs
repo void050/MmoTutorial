@@ -1,8 +1,8 @@
 ﻿namespace Game;
 
-public class Behaviour
+public abstract class Behaviour
 {
-    public GameObject GameObject { get; internal set; }
+    public GameObject GameObject { get; internal set; } = null!;
 
     protected internal virtual void Start()
     {
@@ -10,6 +10,11 @@ public class Behaviour
 
     protected internal virtual void Update(float deltaTime)
     {
+    }
+
+    public void Destroy(GameObject gameObject)
+    {
+        gameObject.GameObjectSystem.Destroy(gameObject);
     }
 
     public T? GetBehaviour<T>() where T : Behaviour

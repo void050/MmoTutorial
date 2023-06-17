@@ -11,6 +11,7 @@ namespace Game
         private readonly Dictionary<byte, PlayerView> _prototypesByViewID = new();
         private readonly Dictionary<ushort, PlayerView> _viewsByPlayerId = new();
         [SerializeField] private PlayerCamera _playerCamera;
+        private readonly List<ushort> _toDelete = new();
         private ushort _playerId;
 
         public void SetPlayerId(ushort playerId)
@@ -37,6 +38,7 @@ namespace Game
 
         public void Synchronize(PlayerSnapshot[] players)
         {
+            float updateTime = Time.realtimeSinceStartup;
             foreach (PlayerSnapshot snapshot in players)
             {
                 if (!_viewsByPlayerId.TryGetValue(snapshot.PlayerId, out PlayerView playerView))
@@ -50,14 +52,30 @@ namespace Game
                     var position = snapshot.Position.ToVector3();
                     playerView = Instantiate(prototype, position, Quaternion.identity);
                     _viewsByPlayerId.Add(snapshot.PlayerId, playerView);
-                    playerView.Initialize(position);
+                    playerView.Initialize(position, updateTime);
                 }
                 else
                 {
-                    playerView.SetPosition(snapshot.Position.ToVector3());
+                    playerView.Synchronize(snapshot, updateTime);
                 }
             }
+
             TrySetPlayerCamera();
+
+            const float deleteAfter = NetworkConfig.SnapshotInterval * 2;
+            foreach (var (id, view) in _viewsByPlayerId)
+            {
+                if (updateTime - view.LastUpdated > deleteAfter)
+                {
+                    _toDelete.Add(id);
+                    Destroy(view.gameObject);
+                }
+            }
+
+            foreach (var id in _toDelete)
+            {
+                _viewsByPlayerId.Remove(id);
+            }
         }
     }
 

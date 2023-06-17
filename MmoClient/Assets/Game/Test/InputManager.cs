@@ -5,7 +5,7 @@ using UnityEngine;
 public class InputManager : MonoBehaviour
 {
     [SerializeField] private NetworkManager _networkManager;
-    private float _timeSinceLastUpdate = 0;
+    private float _timeSinceLastUpdate;
 
 
     void Update()
@@ -26,6 +26,8 @@ public class InputManager : MonoBehaviour
         keyboard |= Input.GetKey(KeyCode.S) ? PlayerKeyboard.Down : 0;
         keyboard |= Input.GetKey(KeyCode.A) ? PlayerKeyboard.Left : 0;
         keyboard |= Input.GetKey(KeyCode.D) ? PlayerKeyboard.Right : 0;
+        keyboard |= Input.GetKey(KeyCode.Alpha1) || Input.GetMouseButton(0) ? PlayerKeyboard.AttackSkill1 : 0;
+        keyboard |= Input.GetKey(KeyCode.Alpha2) || Input.GetMouseButton(1) ? PlayerKeyboard.AttackSkill2 : 0;
 
         var playerInput = new PlayerInput
         {

@@ -5,13 +5,14 @@ namespace Game.Components;
 
 public class PlayerMovementBehaviour : Behaviour
 {
-    private TransformBehaviour _transform;
-    public PlayerInput PlayerInput { get; set; }
+    private TransformBehaviour _transform = null!;
+    private PlayerInputBehaviour _playerInput = null!;
     public float Speed { get; set; } = 5f;
 
     protected override void Start()
     {
         _transform = GameObject.GetRequiredBehaviour<TransformBehaviour>();
+        _playerInput = GameObject.GetRequiredBehaviour<PlayerInputBehaviour>();
     }
 
     protected override void Update(float deltaTime)
@@ -23,22 +24,24 @@ public class PlayerMovementBehaviour : Behaviour
     private Vector2 GetMovementDirection()
     {
         Vector2 movementDirection = Vector2.Zero;
-        if (PlayerInput.Keyboard.HasFlag(PlayerKeyboard.Up))
+        PlayerKeyboard keyboard = _playerInput.PlayerInput.Keyboard;
+
+        if (keyboard.HasFlag(PlayerKeyboard.Up))
         {
             movementDirection += new Vector2(0, 1);
         }
 
-        if (PlayerInput.Keyboard.HasFlag(PlayerKeyboard.Down))
+        if (keyboard.HasFlag(PlayerKeyboard.Down))
         {
             movementDirection += new Vector2(0, -1);
         }
 
-        if (PlayerInput.Keyboard.HasFlag(PlayerKeyboard.Left))
+        if (keyboard.HasFlag(PlayerKeyboard.Left))
         {
             movementDirection += new Vector2(-1, 0);
         }
 
-        if (PlayerInput.Keyboard.HasFlag(PlayerKeyboard.Right))
+        if (keyboard.HasFlag(PlayerKeyboard.Right))
         {
             movementDirection += new Vector2(1, 0);
         }

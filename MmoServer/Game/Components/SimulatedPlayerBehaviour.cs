@@ -16,7 +16,7 @@ public class SimulatedPlayerBehaviour : Behaviour
         PlayerKeyboard.Up | PlayerKeyboard.Right
     };
 
-    private PlayerMovementBehaviour _playerMovementBehaviour = null!;
+    private PlayerInputBehaviour _playerInput = null!;
 
     public float ChangeDirectionEverySeconds = 0.5f;
 
@@ -27,7 +27,7 @@ public class SimulatedPlayerBehaviour : Behaviour
 
     protected override void Start()
     {
-        _playerMovementBehaviour = GetRequiredBehaviour<PlayerMovementBehaviour>();
+        _playerInput = GetRequiredBehaviour<PlayerInputBehaviour>();
     }
 
     protected override void Update(float deltaTime)
@@ -44,9 +44,17 @@ public class SimulatedPlayerBehaviour : Behaviour
         int keyboardIndex = _clockwise
             ? _currentKeyboard % PlayerKeyboards.Length
             : PlayerKeyboards.Length - _currentKeyboard % PlayerKeyboards.Length - 1;
-        _playerMovementBehaviour.PlayerInput = new PlayerInput
+        PlayerKeyboard playerKeyboard = PlayerKeyboards[keyboardIndex];
+        if (Random.Shared.NextSingle() > 0.9f)
         {
-            Keyboard = PlayerKeyboards[keyboardIndex]
+            playerKeyboard |= Random.Shared.NextSingle() > 0.8f
+                ? PlayerKeyboard.AttackSkill2
+                : PlayerKeyboard.AttackSkill1;
+        }
+
+        _playerInput.PlayerInput = new PlayerInput
+        {
+            Keyboard = playerKeyboard
         };
     }
 }

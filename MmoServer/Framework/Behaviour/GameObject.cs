@@ -4,16 +4,22 @@ namespace Game;
 
 public class GameObject
 {
+    public readonly GameObjectSystem GameObjectSystem;
+
+    public bool IsAlive { get; internal set; } = true;
     public string Name { get; set; }
     private readonly List<Behaviour> _behaviours = new();
 
-    public GameObject(string name, params Behaviour[] behaviours)
+    public GameObject(GameObjectSystem gameObjectSystem, string name, params Behaviour[] behaviours)
     {
+        GameObjectSystem = gameObjectSystem;
         Name = name;
         foreach (var behaviour in behaviours)
         {
             AddComponent(behaviour);
         }
+
+        GameObjectSystem.AddGameObject(this);
     }
 
     public void AddComponent<T>(T behaviour) where T : Behaviour

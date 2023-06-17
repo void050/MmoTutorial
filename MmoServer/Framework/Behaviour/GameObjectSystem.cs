@@ -7,7 +7,7 @@ public class GameObjectSystem
     private readonly List<GameObject> _iterateGameObjects = new();
 
 
-    public void AddGameObject(GameObject gameObject)
+    internal void AddGameObject(GameObject gameObject)
     {
         lock (_toAddGameObjects)
         {
@@ -49,5 +49,11 @@ public class GameObjectSystem
                 result.Add(behaviour);
             }
         }
+    }
+
+    internal void Destroy(GameObject gameObject)
+    {
+        _gameObjects.Remove(gameObject);
+        gameObject.IsAlive = false;
     }
 }

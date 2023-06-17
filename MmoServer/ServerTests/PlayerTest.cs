@@ -7,15 +7,21 @@ namespace ServerTests;
 
 public class PlayerTest
 {
-    readonly GameObjectSystem _gameObjectSystem = new();
-    readonly GameObject _player = new("player", new TransformBehaviour(), new PlayerMovementBehaviour());
+    private readonly GameObjectSystem _gameObjectSystem = new();
+    private readonly GameObject _player;
+
+    public PlayerTest()
+    {
+        _player = new(_gameObjectSystem, "player", new TransformBehaviour(), new PlayerMovementBehaviour(),
+            new PlayerInputBehaviour());
+    }
+
 
     [Test]
     public void TestMovement()
     {
-        _gameObjectSystem.AddGameObject(_player);
-        var playerMovement = _player.GetRequiredBehaviour<PlayerMovementBehaviour>();
-        playerMovement.PlayerInput = new PlayerInput { Keyboard = PlayerKeyboard.Right };
+        var playerInput = _player.GetRequiredBehaviour<PlayerInputBehaviour>();
+        playerInput.PlayerInput = new PlayerInput { Keyboard = PlayerKeyboard.Right };
         var transformBehaviour = _player.GetRequiredBehaviour<TransformBehaviour>();
 
 

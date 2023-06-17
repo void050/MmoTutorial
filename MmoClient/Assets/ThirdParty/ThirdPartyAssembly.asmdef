@@ -1,0 +1,16 @@
+{
+    "name": "ThirdPartyAssembly",
+    "rootNamespace": "",
+    "references": [
+        "GUID:17432503eb946054785156f65ad8b6a9"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

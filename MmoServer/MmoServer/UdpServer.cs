@@ -2,6 +2,7 @@
 using System.Numerics;
 using Game;
 using Game.Components;
+using Game.Components.Skills;
 using Riptide.Demos.ConsoleServer.Udp;
 using Riptide.Utils;
 using Shared;
@@ -43,8 +44,7 @@ internal class UdpServerStarter
         const int botsCount = 75;
         for (int i = 0; i < botsCount; i++)
         {
-            var bot = CreateBot(_nextUserId++);
-            _gameObjectSystem.AddGameObject(bot);
+            CreateBot(_nextUserId++);
         }
 
         _server.Start(NetworkConfig.ServerPort, NetworkConfig.MaxClients);
@@ -83,7 +83,6 @@ internal class UdpServerStarter
         }
     }
 
-
     private void GameLoop()
     {
         List<NetworkPlayerBehaviour> networkPlayers = new();
@@ -96,6 +95,11 @@ internal class UdpServerStarter
 
         networkPlayers.Clear();
         _gameObjectSystem.GetAll(networkPlayers);
+        if (networkPlayers.Count == 0)
+        {
+            return;
+        }
+
         PlayerSnapshot[] players = new PlayerSnapshot[networkPlayers.Count];
 
         int next = 0;
@@ -159,11 +163,10 @@ internal class UdpServerStarter
                     _playerIdByLogin.Add(joinRequest.Login, playerId);
                 }
 
-                if (!_playerById.TryGetValue(playerId, out player))
+                if (!_playerById.TryGetValue(playerId, out player) || player.IsAlive == false)
                 {
                     player = CreatePlayer(playerId);
-                    _playerById.Add(playerId, player);
-                    _gameObjectSystem.AddGameObject(player);
+                    _playerById[playerId] = player;
                 }
 
                 _playerByConnection[userConnection] = player;
@@ -183,7 +186,7 @@ internal class UdpServerStarter
 
                 incoming.Get(out InputRequest inputRequest);
 
-                player.GetRequiredBehaviour<PlayerMovementBehaviour>().PlayerInput = inputRequest.Input;
+                player.GetRequiredBehaviour<PlayerInputBehaviour>().PlayerInput = inputRequest.Input;
                 break;
             default:
                 Console.WriteLine($"Received unexpected: {messageId}");
@@ -205,16 +208,20 @@ internal class UdpServerStarter
     {
         var shared = Random.Shared;
         Vector2 position = new(shared.NextSingle() * 10, shared.NextSingle() * 10);
-        return new GameObject($"player_{playerId}", new TransformBehaviour
-        {
-            Position = position
-        }, new NetworkPlayerBehaviour
-        {
-            PlayerId = playerId,
-            ViewId = (byte)Random.Shared.Next(1, 3)
-        }, new PlayerMovementBehaviour
-        {
-            Speed = 5
-        });
+        return new GameObject(_gameObjectSystem, $"player_{playerId}", new TransformBehaviour
+            {
+                Position = position
+            }, new NetworkPlayerBehaviour
+            {
+                PlayerId = playerId,
+                ViewId = (byte)Random.Shared.Next(1, 3)
+            }, new PlayerMovementBehaviour
+            {
+                Speed = 5
+            },
+            new PlayerInputBehaviour(),
+            new HealthBehaviour(100, 100),
+            new FastAttackSkill(),
+            new HeavyAttackSkill());
     }
 }
