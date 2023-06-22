@@ -39,14 +39,14 @@ public class GameObjectSystem
         }
     }
 
-    public void GetAll<T>(List<T> result) where T : Behaviour
+    public void GetAll<T>(List<T> result) where T : Component
     {
         foreach (var gameObject in _gameObjects)
         {
-            var behaviour = gameObject.GetBehaviour<T>();
-            if (behaviour != null)
+            var component = gameObject.GetComponent<T>();
+            if (component != null)
             {
-                result.Add(behaviour);
+                result.Add(component);
             }
         }
     }

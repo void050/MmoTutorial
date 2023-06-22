@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Box2DSharp" Version="0.6.0" />
+    </ItemGroup>
+
 </Project>

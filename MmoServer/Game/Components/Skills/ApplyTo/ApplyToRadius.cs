@@ -13,7 +13,7 @@ public class ApplyToRadius : ISkillApplyTo
     {
         _radius = radius;
         _source = source;
-        _transform = _source.GetRequiredBehaviour<TransformBehaviour>();
+        _transform = _source.GetRequiredComponent<TransformBehaviour>();
     }
 
 

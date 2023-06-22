@@ -7,6 +7,9 @@ namespace Game
 {
     public class PlayerView : MonoBehaviour
     {
+        private const PlayerKeyboard AnyMovement =
+            PlayerKeyboard.Up | PlayerKeyboard.Down | PlayerKeyboard.Left | PlayerKeyboard.Right;
+
         private InterpolationHelper _interpolationHelper = null!;
         [SerializeField] private Transform _root = null!;
         [SerializeField] private Animator _animator = null!;
@@ -17,6 +20,9 @@ namespace Game
         private static readonly int Skill2AnimatorProperty = Animator.StringToHash("Skill2");
         private float _speed;
         public float LastUpdated { get; private set; }
+        private PlayerKeyboard _keyboard;
+        private Quaternion _rotation;
+        private Quaternion _targetRotation;
 
         public void Initialize(Vector3 position, float updateTime)
         {
@@ -29,6 +35,7 @@ namespace Game
 
         public void Synchronize(PlayerSnapshot snapshot, float updateTime)
         {
+            _keyboard = snapshot.Keyboard;
             Vector3 position = snapshot.Position.ToVector3();
             float health = snapshot.Health.Unpack(PlayerSnapshot.MinHealth, PlayerSnapshot.MaxHealth);
             LastUpdated = updateTime;
@@ -36,12 +43,7 @@ namespace Game
             _healthBar.gameObject.SetActive(health < minHealthToShowBar);
             _healthBar.UpdateHealthBar(health);
             _interpolationHelper.SetPosition(position);
-            var previousPosition = _interpolationHelper.PreviousPosition;
-            if (position != previousPosition)
-            {
-                var lookRotation = Quaternion.LookRotation(position - previousPosition);
-                _interpolationHelper.SetRotation(lookRotation);
-            }
+
 
             if ((snapshot.ActiveSkill & ActiveSkill.AttackSkill1) != 0)
             {
@@ -54,16 +56,57 @@ namespace Game
             }
         }
 
+        private Vector2 GetMovementDirection(PlayerKeyboard keyboard)
+        {
+            Vector2 movementDirection = Vector2.zero;
+
+            if ((keyboard & PlayerKeyboard.Up) != 0)
+            {
+                movementDirection += new Vector2(0, 1);
+            }
+
+            if ((keyboard & PlayerKeyboard.Down) != 0)
+            {
+                movementDirection += new Vector2(0, -1);
+            }
+
+            if ((keyboard & PlayerKeyboard.Left) != 0)
+            {
+                movementDirection += new Vector2(-1, 0);
+            }
+
+            if ((keyboard & PlayerKeyboard.Right) != 0)
+            {
+                movementDirection += new Vector2(1, 0);
+            }
+
+            float length = movementDirection.magnitude;
+            if (length > 0)
+            {
+                movementDirection /= length;
+            }
+
+            return movementDirection;
+        }
+
         public void Update()
         {
             _interpolationHelper.Update(Time.deltaTime);
             _root.position = _interpolationHelper.ViewPosition;
-            Vector3 viewRotationEuler = _interpolationHelper.ViewRotation.eulerAngles;
+
+            if ((_keyboard & AnyMovement) != 0)
+            {
+                Vector2 movementDirection = GetMovementDirection(_keyboard);
+                float angle = Mathf.Atan2(movementDirection.x, movementDirection.y) * Mathf.Rad2Deg;
+                _targetRotation = Quaternion.Euler(0, angle, 0);
+            }
+
             //rotation from animation
             if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Hurricane kick"))
             {
-                Vector3 correctRotation = new Vector3(0, viewRotationEuler.y, 0);
-                _root.eulerAngles = correctRotation;
+                const float angleSpeed = 10f;
+                _rotation = Quaternion.RotateTowards(_rotation, _targetRotation, angleSpeed);
+                _root.rotation = _rotation;
             }
 
             UpdateSpeedAnimationProperty();

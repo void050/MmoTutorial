@@ -1,3 +1,3 @@
-﻿using Riptide.Demos.ConsoleServer;
+﻿using Game;
 
 new UdpServerStarter().Run();

@@ -1,4 +1,6 @@
-﻿namespace Riptide.Demos.ConsoleServer.Udp;
+﻿using Riptide;
+
+namespace Game.Udp;
 
 public class RiptideServer : Server
 {

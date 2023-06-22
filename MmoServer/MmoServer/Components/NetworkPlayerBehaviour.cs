@@ -8,16 +8,18 @@ public class NetworkPlayerBehaviour : Behaviour
     public ushort PlayerId;
     public byte ViewId = 1;
     private TransformBehaviour _transform = null!;
-    private HealthBehaviour _health = null!;
+    private HealthComponent _health = null!;
     private FastAttackSkill _fastAttackSkill = null!;
     private HeavyAttackSkill _heavyAttackSkill = null!;
+    private PlayerInputComponent _inputComponent = null!;
 
     protected override void Start()
     {
-        _transform = GetRequiredBehaviour<TransformBehaviour>();
-        _health = GetRequiredBehaviour<HealthBehaviour>();
-        _fastAttackSkill = GetRequiredBehaviour<FastAttackSkill>();
-        _heavyAttackSkill = GetRequiredBehaviour<HeavyAttackSkill>();
+        _transform = GetRequiredComponent<TransformBehaviour>();
+        _health = GetRequiredComponent<HealthComponent>();
+        _fastAttackSkill = GetRequiredComponent<FastAttackSkill>();
+        _heavyAttackSkill = GetRequiredComponent<HeavyAttackSkill>();
+        _inputComponent = GetRequiredComponent<PlayerInputComponent>();
     }
 
     public PlayerSnapshot GetSnapshot()
@@ -32,7 +34,8 @@ public class NetworkPlayerBehaviour : Behaviour
             Position = _transform.Position.ToClientVector2(),
             ViewId = ViewId,
             Health = ByteFloat.FromFloat(_health.Health, 0, _health.MaxHealth),
-            ActiveSkill = activeSkill
+            ActiveSkill = activeSkill,
+            Keyboard = _inputComponent.PlayerInput.Keyboard
         };
     }
 }

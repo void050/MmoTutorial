@@ -43,6 +43,7 @@ namespace Shared
         public ushort PlayerId;
         public byte ViewId;
         public Vector2 Position;
+        public PlayerKeyboard Keyboard;
         public ByteFloat Health;
         public ActiveSkill ActiveSkill;
 

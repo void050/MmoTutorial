@@ -1,30 +1,31 @@
 ﻿using System.Numerics;
+using Framework.Physics;
 using Shared;
 
 namespace Game.Components;
 
 public class PlayerMovementBehaviour : Behaviour
 {
-    private TransformBehaviour _transform = null!;
-    private PlayerInputBehaviour _playerInput = null!;
+    private PlayerInputComponent _playerInput = null!;
+    private RigidBody _rigidBody = null!;
     public float Speed { get; set; } = 5f;
 
     protected override void Start()
     {
-        _transform = GameObject.GetRequiredBehaviour<TransformBehaviour>();
-        _playerInput = GameObject.GetRequiredBehaviour<PlayerInputBehaviour>();
+        _rigidBody = GameObject.GetRequiredComponent<RigidBodyBehaviour>().RigidBody;
+        _playerInput = GameObject.GetRequiredComponent<PlayerInputComponent>();
     }
 
     protected override void Update(float deltaTime)
     {
-        var movementDirection = GetMovementDirection();
-        _transform.Position += movementDirection * (Speed * deltaTime);
+        var movementDirection = GetMovementDirection(_playerInput.PlayerInput.Keyboard);
+
+        _rigidBody.LinearVelocity = movementDirection * Speed;
     }
 
-    private Vector2 GetMovementDirection()
+    private Vector2 GetMovementDirection(PlayerKeyboard keyboard)
     {
         Vector2 movementDirection = Vector2.Zero;
-        PlayerKeyboard keyboard = _playerInput.PlayerInput.Keyboard;
 
         if (keyboard.HasFlag(PlayerKeyboard.Up))
         {

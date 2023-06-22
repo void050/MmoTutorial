@@ -16,7 +16,7 @@ public class SimulatedPlayerBehaviour : Behaviour
         PlayerKeyboard.Up | PlayerKeyboard.Right
     };
 
-    private PlayerInputBehaviour _playerInput = null!;
+    private PlayerInputComponent _playerInput = null!;
 
     public float ChangeDirectionEverySeconds = 0.5f;
 
@@ -27,7 +27,7 @@ public class SimulatedPlayerBehaviour : Behaviour
 
     protected override void Start()
     {
-        _playerInput = GetRequiredBehaviour<PlayerInputBehaviour>();
+        _playerInput = GetRequiredComponent<PlayerInputComponent>();
     }
 
     protected override void Update(float deltaTime)

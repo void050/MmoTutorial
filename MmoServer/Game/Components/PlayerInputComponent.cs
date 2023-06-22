@@ -2,9 +2,7 @@
 
 namespace Game.Components;
 
-public class PlayerInputBehaviour: Behaviour
+public class PlayerInputComponent : Component
 {
-
     public PlayerInput PlayerInput { get; set; }
-    
 }

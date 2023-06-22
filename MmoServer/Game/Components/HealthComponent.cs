@@ -1,11 +1,11 @@
 ﻿namespace Game.Components;
 
-public class HealthBehaviour : Behaviour
+public class HealthComponent : Component
 {
     public float MaxHealth;
     public float Health { get; private set; }
 
-    public HealthBehaviour(float health, float maxHealth)
+    public HealthComponent(float health, float maxHealth)
     {
         Health = health;
         MaxHealth = maxHealth;

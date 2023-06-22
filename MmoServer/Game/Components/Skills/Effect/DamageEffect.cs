@@ -1,6 +1,6 @@
 ﻿namespace Game.Components.Skills;
 
-public class DamageEffect : BaseEffect<HealthBehaviour>
+public class DamageEffect : BaseEffect<HealthComponent>
 {
     public DamageEffect(float damage)
     {
@@ -10,8 +10,8 @@ public class DamageEffect : BaseEffect<HealthBehaviour>
     private float Damage { get; }
 
 
-    protected override void Apply(HealthBehaviour behaviour)
+    protected override void Apply(HealthComponent component)
     {
-        behaviour.TakeDamage(Damage);
+        component.TakeDamage(Damage);
     }
 }

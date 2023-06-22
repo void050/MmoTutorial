@@ -5,7 +5,7 @@ namespace Game.Components.Skills;
 public abstract class SkillBehaviour : Behaviour
 {
     protected abstract PlayerKeyboard UseKey { get; }
-    private PlayerInputBehaviour _playerInput = null!;
+    private PlayerInputComponent _playerInput = null!;
     private float _cooldown;
     private float _currentCooldown;
 
@@ -28,7 +28,7 @@ public abstract class SkillBehaviour : Behaviour
 
     protected override void Start()
     {
-        _playerInput = GameObject.GetRequiredBehaviour<PlayerInputBehaviour>();
+        _playerInput = GameObject.GetRequiredComponent<PlayerInputComponent>();
     }
 
     protected void Init(ISkillApplyTo applyTo, ISkillEffect effect, float cooldown)

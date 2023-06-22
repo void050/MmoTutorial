@@ -1,15 +1,15 @@
 ﻿namespace Game.Components.Skills;
 
-public abstract class BaseEffect<TBehaviour> : ISkillEffect where TBehaviour : Behaviour
+public abstract class BaseEffect<TComponent> : ISkillEffect where TComponent : Component
 {
     public void Apply(GameObject target)
     {
-        var behaviour = target.GetBehaviour<TBehaviour>();
-        if (behaviour != null)
+        var component = target.GetComponent<TComponent>();
+        if (component != null)
         {
-            Apply(behaviour);
+            Apply(component);
         }
     }
 
-    protected abstract void Apply(TBehaviour behaviour);
+    protected abstract void Apply(TComponent behaviour);
 }

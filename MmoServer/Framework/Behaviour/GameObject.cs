@@ -1,31 +1,41 @@
 ﻿using System.Text;
+using Framework.Physics;
 
 namespace Game;
 
 public class GameObject
 {
     public readonly GameObjectSystem GameObjectSystem;
+    public readonly PhysicsWorld PhysicsWorld;
 
     public bool IsAlive { get; internal set; } = true;
     public string Name { get; set; }
     private readonly List<Behaviour> _behaviours = new();
+    private readonly List<Component> _components = new();
 
-    public GameObject(GameObjectSystem gameObjectSystem, string name, params Behaviour[] behaviours)
+    public GameObject(GameObjectSystem gameObjectSystem, PhysicsWorld physicsWorld, string name, params Component[] components)
     {
         GameObjectSystem = gameObjectSystem;
+        PhysicsWorld = physicsWorld;
         Name = name;
-        foreach (var behaviour in behaviours)
+        foreach (var component in components)
         {
-            AddComponent(behaviour);
+            AddComponent(component);
         }
 
         GameObjectSystem.AddGameObject(this);
     }
 
-    public void AddComponent<T>(T behaviour) where T : Behaviour
+    public void AddComponent<T>(T component) where T : Component
     {
-        behaviour.GameObject = this;
-        _behaviours.Add(behaviour);
+        component.GameObject = this;
+        component.PhysicsWorld = PhysicsWorld;
+        component.GameObjectSystem = GameObjectSystem;
+        _components.Add(component);
+        if (component is Behaviour behaviour)
+        {
+            _behaviours.Add(behaviour);
+        }
     }
 
     internal void Start()
@@ -58,28 +68,28 @@ public class GameObject
         }
     }
 
-    public T? GetBehaviour<T>() where T : Behaviour
+    public T? GetComponent<T>() where T : Component
     {
-        foreach (var behaviour in _behaviours)
+        foreach (var component in _components)
         {
-            if (behaviour is T typedBehaviour)
+            if (component is T typedComponent)
             {
-                return typedBehaviour;
+                return typedComponent;
             }
         }
 
         return null;
     }
 
-    public T GetRequiredBehaviour<T>() where T : Behaviour
+    public T GetRequiredComponent<T>() where T : Component
     {
-        var behaviour = GetBehaviour<T>();
-        if (behaviour == null)
+        var component = GetComponent<T>();
+        if (component == null)
         {
-            throw new Exception($"Behaviour of type {typeof(T)} not found on GameObject {Name}");
+            throw new Exception($"Component of type {typeof(T)} not found on GameObject {Name}");
         }
 
-        return behaviour;
+        return component;
     }
 
 

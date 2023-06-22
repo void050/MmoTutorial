@@ -1,14 +1,15 @@
-﻿using System.Diagnostics;
-using System.Numerics;
-using Game;
+﻿using System.Numerics;
+using Box2DSharp.Collision.Shapes;
+using Framework.Physics;
 using Game.Components;
 using Game.Components.Skills;
-using Riptide.Demos.ConsoleServer.Udp;
+using Game.Udp;
 using Riptide.Utils;
 using Shared;
 using PrecisionTiming;
+using Riptide;
 
-namespace Riptide.Demos.ConsoleServer;
+namespace Game;
 
 internal class UdpServerStarter
 {
@@ -21,6 +22,7 @@ internal class UdpServerStarter
     private readonly Dictionary<Connection, GameObject> _playerByConnection = new();
     private readonly Dictionary<string, ushort> _playerIdByLogin = new();
     private readonly GameObjectSystem _gameObjectSystem = new();
+    private readonly PhysicsWorld _physicsWorld;
     private readonly List<Message> _sendToAll = new();
     private readonly List<Message> _iterateSendToAll = new();
     private readonly PrecisionTimer _gameLoopTimer = new();
@@ -30,6 +32,7 @@ internal class UdpServerStarter
 
     public UdpServerStarter()
     {
+        _physicsWorld = new PhysicsWorld();
         _server.OnMessage += OnMessageReceived;
         _networkLoopTimer.SetInterval(NetworkLoop, NetworkConfig.TickIntervalMilliseconds, false);
         _gameLoopTimer.SetInterval(GameLoop, NetworkConfig.TickIntervalMilliseconds, false);
@@ -87,6 +90,7 @@ internal class UdpServerStarter
     {
         List<NetworkPlayerBehaviour> networkPlayers = new();
         _gameObjectSystem.Update(NetworkConfig.TickInterval);
+        _physicsWorld.Update(NetworkConfig.TickInterval);
 
         if (_gameLoopUpdateIndex++ % NetworkConfig.SnapshotEveryTick != 0)
         {
@@ -186,7 +190,7 @@ internal class UdpServerStarter
 
                 incoming.Get(out InputRequest inputRequest);
 
-                player.GetRequiredBehaviour<PlayerInputBehaviour>().PlayerInput = inputRequest.Input;
+                player.GetRequiredComponent<PlayerInputComponent>().PlayerInput = inputRequest.Input;
                 break;
             default:
                 Console.WriteLine($"Received unexpected: {messageId}");
@@ -208,10 +212,13 @@ internal class UdpServerStarter
     {
         var shared = Random.Shared;
         Vector2 position = new(shared.NextSingle() * 10, shared.NextSingle() * 10);
-        return new GameObject(_gameObjectSystem, $"player_{playerId}", new TransformBehaviour
-            {
-                Position = position
-            }, new NetworkPlayerBehaviour
+        var rigidBody = new RigidBody(new CircleShape { Radius = 0.4f })
+        {
+            Type = RigidBody.BodyType.DynamicBody,
+            SpawnPosition = position
+        };
+        return new GameObject(_gameObjectSystem, _physicsWorld, $"player_{playerId}", new RigidBodyBehaviour(rigidBody),
+            new TransformBehaviour(), new NetworkPlayerBehaviour
             {
                 PlayerId = playerId,
                 ViewId = (byte)Random.Shared.Next(1, 3)
@@ -219,9 +226,10 @@ internal class UdpServerStarter
             {
                 Speed = 5
             },
-            new PlayerInputBehaviour(),
-            new HealthBehaviour(100, 100),
+            new PlayerInputComponent(),
+            new HealthComponent(100, 100),
             new FastAttackSkill(),
-            new HeavyAttackSkill());
+            new HeavyAttackSkill()
+        );
     }
 }
